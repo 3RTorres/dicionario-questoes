@@ -5,8 +5,14 @@
   <meta charset="UTF-8">
   <title>Caderno de Questões</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
     #topbar {
       position: sticky;
       top: 0;
@@ -15,24 +21,75 @@
       padding: 10px 0;
       margin-bottom: 20px;
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       z-index: 1000;
     }
-    button { padding: 6px 12px; margin-left: 5px; }
-    .questao { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
-    .navegacao { margin-top: 10px; }
-    .alternativa { display: block; margin-bottom: 8px; }
-    .feedback { margin-top: 10px; font-weight: bold; }
-    #resumo-final { margin-top: 30px; font-size: 1.1em; font-weight: bold; }
+    #usuario-logado {
+      margin-left: 10px;
+      flex: 1 1 100%;
+      text-align: left;
+    }
+    .topbar-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 10px;
+      flex: 1 1 100%;
+      padding: 0 10px;
+    }
+    button {
+      padding: 6px 12px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      background-color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .questao {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+    .navegacao {
+      margin-top: 10px;
+    }
+    .alternativa {
+      display: block;
+      margin-bottom: 8px;
+    }
+    .feedback {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    #resumo-final {
+      margin-top: 30px;
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+    @media (min-width: 601px) {
+      #topbar {
+        flex-wrap: nowrap;
+      }
+      #usuario-logado {
+        flex: none;
+      }
+      .topbar-buttons {
+        flex: none;
+        margin-top: 0;
+      }
+    }
   </style>
 </head>
 <body>
 
 <!-- Barra fixa -->
 <div id="topbar">
-  <div style="margin-left: 10px;">👤 <span id="usuario-logado">Usuário não identificado</span></div>
-  <div style="margin-right: 10px;">
+  <div id="usuario-logado">👤 Usuário não identificado</div>
+  <div class="topbar-buttons">
     <button onclick="voltar()">📘 Novo Caderno</button>
     <button onclick="abrirDesempenho()">📊 Desempenho</button>
     <button onclick="logout()">Sair</button>
@@ -40,9 +97,6 @@
 </div>
 
 <h2>Dicionário de Questões</h2>
-
-<!-- Aqui entra o conteúdo dinâmico (filtros, resultados, questões, etc.) -->
-<!-- Esse exemplo mantém apenas a barra fixa como base -->
 
 <script>
   const userEmail = localStorage.getItem('user_email');
