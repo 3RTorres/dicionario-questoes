@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Caderno de Questões</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .questao { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+    .navegacao { margin-top: 10px; }
+    .alternativa { display: block; margin-bottom: 8px; }
+    .feedback { margin-top: 10px; font-weight: bold; }
+    #resumo-final { margin-top: 30px; font-size: 1.1em; font-weight: bold; }
+    #topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    button { padding: 6px 12px; margin-left: 5px; }
+  </style>
+</head>
+<body style="font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto;">
+
+<div id="topbar">
+  <div>👤 <span id="usuario-logado">Usuário não identificado</span></div>
+  <div>
+    <button onclick="abrirDesempenho()">📊 Desempenho</button>
+    <button onclick="voltar()">📘 Novo Caderno</button>
+    <button onclick="logout()">Sair</button>
+  </div>
+</div>
+
+<h2>Dicionário de Questões</h2>
+
+<!-- Conteúdo (filtros, busca, questões, etc.) -->
+<p>Continue normalmente com seus filtros e cadernos.</p>
+
+<script>
+  const userEmail = localStorage.getItem('user_email');
+  const userId = localStorage.getItem('user_id');
+  if (userEmail) document.getElementById('usuario-logado').textContent = userEmail;
+
+  function logout() {
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('user_id');
+    window.location.href = 'login-dicionario-questoes-redirect.html';
+  }
+
+  function voltar() {
+    window.location.href = 'caderno-questoes-salva-respostas.html';
+  }
+
+  function abrirDesempenho() {
+    window.location.href = 'desempenho-aluno-corrigido.html';
+  }
+</script>
+
+</body>
+</html>

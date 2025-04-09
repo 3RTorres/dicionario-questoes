@@ -1,0 +1,68 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Caderno de Questões</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+    #topbar {
+      position: sticky;
+      top: 0;
+      background: #fff;
+      border-bottom: 1px solid #ccc;
+      padding: 10px 0;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+    button { padding: 6px 12px; margin-left: 5px; }
+    .questao { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+    .navegacao { margin-top: 10px; }
+    .alternativa { display: block; margin-bottom: 8px; }
+    .feedback { margin-top: 10px; font-weight: bold; }
+    #resumo-final { margin-top: 30px; font-size: 1.1em; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<!-- Barra fixa -->
+<div id="topbar">
+  <div style="margin-left: 10px;">👤 <span id="usuario-logado">Usuário não identificado</span></div>
+  <div style="margin-right: 10px;">
+    <button onclick="voltar()">📘 Novo Caderno</button>
+    <button onclick="abrirDesempenho()">📊 Desempenho</button>
+    <button onclick="logout()">Sair</button>
+  </div>
+</div>
+
+<h2>Dicionário de Questões</h2>
+
+<!-- Aqui entra o conteúdo dinâmico (filtros, resultados, questões, etc.) -->
+<!-- Esse exemplo mantém apenas a barra fixa como base -->
+
+<script>
+  const userEmail = localStorage.getItem('user_email');
+  const userId = localStorage.getItem('user_id');
+  if (userEmail) document.getElementById('usuario-logado').textContent = userEmail;
+
+  function logout() {
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('user_id');
+    window.location.href = 'login-dicionario-questoes-redirect.html';
+  }
+
+  function voltar() {
+    window.location.href = 'caderno-questoes-salva-respostas.html';
+  }
+
+  function abrirDesempenho() {
+    window.location.href = 'desempenho-aluno-corrigido.html';
+  }
+</script>
+
+</body>
+</html>

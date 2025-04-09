@@ -1,0 +1,35 @@
+
+<!-- Barra fixa de navegação -->
+<div id="topbar" style="position: sticky; top: 0; background: #fff; border-bottom: 1px solid #ccc; padding: 10px 0; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000;">
+  <div style="margin-left: 10px;">
+    👤 <span id="usuario-logado">Usuário não identificado</span>
+  </div>
+  <div style="margin-right: 10px;">
+    <button onclick="voltar()">📘 Novo Caderno</button>
+    <button onclick="abrirDesempenho()">📊 Desempenho</button>
+    <button onclick="logout()">Sair</button>
+  </div>
+</div>
+
+<script>
+  const userEmail = localStorage.getItem('user_email');
+  const userId = localStorage.getItem('user_id');
+  if (userEmail) {
+    const userLabel = document.getElementById('usuario-logado');
+    if (userLabel) userLabel.textContent = userEmail;
+  }
+
+  function logout() {
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('user_id');
+    window.location.href = 'login-dicionario-questoes-redirect.html';
+  }
+
+  function voltar() {
+    window.location.href = 'caderno-questoes-salva-respostas.html';
+  }
+
+  function abrirDesempenho() {
+    window.location.href = 'desempenho-aluno-corrigido.html';
+  }
+</script>

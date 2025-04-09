@@ -1,0 +1,47 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Caderno de Questões - Dicionário</title>
+  <style>
+    .questao { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+    .navegacao { margin-top: 10px; }
+    .alternativa { display: block; margin-bottom: 8px; }
+    .feedback { margin-top: 10px; font-weight: bold; }
+    #resumo-final { margin-top: 30px; font-size: 1.1em; font-weight: bold; }
+    #cabecalho { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  </style>
+</head>
+<body style="font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto;">
+
+<div id="cabecalho">
+  <div>👤 <span id="usuario-logado">Usuário não identificado</span></div>
+  <button onclick="logout()">Sair</button>
+</div>
+
+<h2>Dicionário de Questões</h2>
+
+<!-- Conteúdo da página como filtros, busca e questões será carregado aqui -->
+<p>Essa versão já mostra o usuário logado e botão de logout.</p>
+
+<script>
+  // Exibe o usuário logado
+  const userEmail = localStorage.getItem('user_email');
+  const userId = localStorage.getItem('user_id');
+
+  if (userEmail) {
+    document.getElementById('usuario-logado').textContent = userEmail;
+  }
+
+  // Função de logout
+  function logout() {
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('user_id');
+    alert('Você saiu com sucesso.');
+    window.location.href = 'login-dicionario-questoes-redirect.html';
+  }
+</script>
+
+</body>
+</html>

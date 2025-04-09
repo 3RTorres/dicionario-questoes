@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Desempenho do Aluno</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    h2 { margin-bottom: 10px; }
+    .card { border: 1px solid #ccc; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+    .disciplina { margin-left: 10px; }
+    #topbar {
+      position: sticky;
+      top: 0;
+      background: #fff;
+      border-bottom: 1px solid #ccc;
+      padding: 10px 0;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+    button { padding: 6px 12px; margin-left: 5px; }
+  </style>
+</head>
+<body>
+
+<div id="topbar">
+  <div style="margin-left: 10px;">👤 <span id="usuario-logado">Usuário não identificado</span></div>
+  <div style="margin-right: 10px;">
+    <button onclick="voltar()">📘 Novo Caderno</button>
+    <button onclick="abrirDesempenho()">📊 Desempenho</button>
+    <button onclick="logout()">Sair</button>
+  </div>
+</div>
+
+<h2>📊 Seu Desempenho</h2>
+
+<div class="card" id="geral">
+  <strong>Resumo Geral</strong>
+  <p>🔄 Carregando...</p>
+</div>
+
+<div class="card" id="por-disciplina">
+  <strong>Acertos por Disciplina</strong>
+  <p>🔄 Carregando...</p>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://frgyzcmwzepqhtgymsrz.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZ3l6Y213emVwcWh0Z3ltc3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxNDI0MTQsImV4cCI6MjA1OTcxODQxNH0.iJU0gTWXYF2To7FU8Uzog9uGtOzfYp7Q5fPy4fh3ICo';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const userEmail = localStorage.getItem('user_email');
+  const userId = localStorage.getItem('user_id');
+  if (userEmail) document.getElementById('usuario-logado').textContent = userEmail;
+
+  function logout() {
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('user_id');
+    window.location.href = 'login-dicionario-questoes-redirect.html';
+  }
+
+  function voltar() {
+    window.location.href = 'caderno-questoes-salva-respostas.html';
+  }
+
+  function abrirDesempenho() {
+    window.location.href = 'desempenho-aluno-corrigido.html';
+  }
+
+  async function carregarDesempenho() {
+    if (!userId) return;
+
+    const { data: respostas, error } = await supabase
+      .from('respostas')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (error || !respostas) {
+      document.getElementById('geral').innerHTML = '<p>Erro ao carregar desempenho.</p>';
+      return;
+    }
+
+    const total = respostas.length;
+    const acertos = respostas.filter(r => r.acertou).length;
+    const aproveitamento = total > 0 ? Math.round((acertos / total) * 100) : 0;
+
+    document.getElementById('geral').innerHTML = `
+      <strong>Resumo Geral</strong>
+      <p>📌 Total de questões respondidas: <strong>${total}</strong></p>
+      <p>✅ Total de acertos: <strong>${acertos}</strong></p>
+      <p>📊 Aproveitamento: <strong>${aproveitamento}%</strong></p>
+    `;
+
+    const questaoIds = respostas.map(r => r.questao_id);
+    const { data: questoes } = await supabase
+      .from('perguntas2')
+      .select('id, disciplina')
+      .in('id', questaoIds);
+
+    const mapa = {};
+    questoes.forEach(q => mapa[q.id] = q.disciplina || 'Desconhecida');
+
+    const stats = {};
+    respostas.forEach(r => {
+      const disc = mapa[r.questao_id] || 'Desconhecida';
+      if (!stats[disc]) stats[disc] = { total: 0, acertos: 0 };
+      stats[disc].total++;
+      if (r.acertou) stats[disc].acertos++;
+    });
+
+    let html = '';
+    for (const disciplina in stats) {
+      const d = stats[disciplina];
+      const perc = Math.round((d.acertos / d.total) * 100);
+      html += `<p class="disciplina">📘 ${disciplina}: <strong>${perc}%</strong> (${d.acertos}/${d.total})</p>`;
+    }
+
+    document.getElementById('por-disciplina').innerHTML = `
+      <strong>Acertos por Disciplina</strong>
+      ${html || '<p>Nenhuma disciplina registrada ainda.</p>'}
+    `;
+  }
+
+  carregarDesempenho();
+</script>
+
+</body>
+</html>
