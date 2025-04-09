@@ -99,14 +99,28 @@
 <h2>Dicionário de Questões</h2>
 
 <script>
-  const userEmail = localStorage.getItem('user_email');
-  const userId = localStorage.getItem('user_id');
-  if (userEmail) document.getElementById('usuario-logado').textContent = userEmail;
+  const supabase = window.supabase.createClient(
+    'https://frgyzcmwzepqhtgymsrz.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZ3l6Y213emVwcWh0Z3ltc3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxNDI0MTQsImV4cCI6MjA1OTcxODQxNH0.iJU0gTWXYF2To7FU8Uzog9uGtOzfYp7Q5fPy4fh3ICo'
+  );
+
+  async function checkSession() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session && session.user) {
+      document.getElementById('usuario-logado').textContent = `👤 ${session.user.email}`;
+    } else {
+      window.location.href = 'login-dicionario-questoes-redirect.html';
+    }
+  }
+
+  checkSession();
 
   function logout() {
-    localStorage.removeItem('user_email');
-    localStorage.removeItem('user_id');
-    window.location.href = 'login-dicionario-questoes-redirect.html';
+    supabase.auth.signOut().then(() => {
+      localStorage.removeItem('user_email');
+      localStorage.removeItem('user_id');
+      window.location.href = 'login-dicionario-questoes-redirect.html';
+    });
   }
 
   function voltar() {
