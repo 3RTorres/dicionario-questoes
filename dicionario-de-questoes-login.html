@@ -111,6 +111,9 @@
       document.getElementById('mensagem').innerText = '❌ Erro no cadastro: ' + error.message;
     } else {
       document.getElementById('mensagem').innerText = '✅ Cadastro realizado! Verifique seu e-mail.';
+      setTimeout(() => {
+        window.location.href = 'caderno-questoes-com-barra.html';
+      }, 2000);
     }
   }
 </script>
