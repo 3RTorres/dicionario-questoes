@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -88,7 +87,7 @@
 
 <!-- Barra fixa -->
 <div id="topbar">
-  <div id="usuario-logado">👤 Verificando login...</div>
+  <div id="usuario-logado">👤 Verificando autenticação...</div>
   <div class="topbar-buttons">
     <button onclick="voltar()">📘 Novo Caderno</button>
     <button onclick="abrirDesempenho()">📊 Desempenho</button>
@@ -101,32 +100,25 @@
 <script>
   const supabase = window.supabase.createClient(
     'https://frgyzcmwzepqhtgymsrz.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZ3l6Y213emVwcWh0Z3ltc3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxNDI0MTQsImV4cCI6MjA1OTcxODQxNH0.iJU0gTWXYF2To7FU8Uzog9uGtOzfYp7Q5fPy4fh3ICo',
-    {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true
-      }
-    }
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZ3l6Y213emVwcWh0Z3ltc3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxNDI0MTQsImV4cCI6MjA1OTcxODQxNH0.iJU0gTWXYF2To7FU8Uzog9uGtOzfYp7Q5fPy4fh3ICo'
   );
 
-  async function verificarLogin() {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (user) {
-      document.getElementById('usuario-logado').textContent = `👤 ${user.email}`;
+  async function verificarSessao() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      window.location.href = 'dicionario-de-questoes-login.html';
     } else {
-      window.location.href = 'login-dicionario-questoes-redirect.html';
+      document.getElementById('usuario-logado').textContent = '👤 ' + session.user.email;
     }
   }
 
-  verificarLogin();
+  verificarSessao();
 
-  function logout() {
-    supabase.auth.signOut().then(() => {
-      localStorage.removeItem('user_email');
-      localStorage.removeItem('user_id');
-      window.location.href = 'login-dicionario-questoes-redirect.html';
-    });
+  async function logout() {
+    await supabase.auth.signOut();
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('user_id');
+    window.location.href = 'dicionario-de-questoes-login.html';
   }
 
   function voltar() {
