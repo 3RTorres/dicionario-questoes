@@ -104,16 +104,21 @@
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZ3l6Y213emVwcWh0Z3ltc3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxNDI0MTQsImV4cCI6MjA1OTcxODQxNH0.iJU0gTWXYF2To7FU8Uzog9uGtOzfYp7Q5fPy4fh3ICo'
   );
 
-  async function checkSession() {
-    const { data: { session } } = await supabase.auth.getSession();
+  // Espera o carregamento da sessão com mais segurança
+  supabase.auth.getSession().then(({ data: { session } }) => {
     if (session && session.user) {
       document.getElementById('usuario-logado').textContent = `👤 ${session.user.email}`;
     } else {
       window.location.href = 'login-dicionario-questoes-redirect.html';
     }
-  }
+  });
 
-  checkSession();
+  // Garante que futuras mudanças sejam ouvidas
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (!session) {
+      window.location.href = 'login-dicionario-questoes-redirect.html';
+    }
+  });
 
   function logout() {
     supabase.auth.signOut().then(() => {
