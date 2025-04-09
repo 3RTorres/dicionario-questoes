@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Dicionário de Questões - Interativo com Acertos</title>
+  <style>
+    .questao { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+    .navegacao { margin-top: 10px; }
+    .alternativa { display: block; margin-bottom: 8px; }
+    .feedback { margin-top: 10px; font-weight: bold; }
+    #resumo-final { margin-top: 30px; font-size: 1.1em; font-weight: bold; }
+  </style>
+</head>
+<body style="font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto;">
+
+<h2>Dicionário de Questões</h2>
+
+<!-- Filtros -->
+<div>
+  <label>Disciplina:</label>
+  <select id="filtro-disciplina">
+    <option value="">Todas</option>
+    <option value="Direito Constitucional">Direito Constitucional</option>
+    <option value="Direito Administrativo">Direito Administrativo</option>
+    <option value="Administração Financeira e Orçamentária">Administração Financeira e Orçamentária</option>
+  </select>
+
+  <label style="margin-left: 20px;">Banca:</label>
+  <select id="filtro-banca">
+    <option value="">Todas</option>
+    <option value="CESPE">CESPE</option>
+    <option value="FCC">FCC</option>
+    <option value="IBFC">IBFC</option>
+    <option value="FGV">FGV</option>
+    <option value="VUNESP">VUNESP</option>
+    <option value="CESGRANRIO">CESGRANRIO</option>
+    <option value="FUNDATEC">FUNDATEC</option>
+  </select>
+
+  <button onclick="buscarQuestoes()" style="margin-left: 20px;">Buscar</button>
+</div>
+
+<div id="resumo-busca" style="margin-top: 20px;"></div>
+
+<div id="selecao-quantidade" style="margin-top: 20px; display: none;">
+  <label>Quantas questões deseja ver?</label>
+  <input type="number" id="quantidade-desejada" min="1" style="width: 60px;">
+  <button onclick="gerarCaderno()">Gerar Caderno</button>
+</div>
+
+<div id="questoes-container" style="margin-top: 30px;"></div>
+<div id="resumo-final"></div>
+
+<script>
+  const SUPABASE_URL = 'https://frgyzcmwzepqhtgymsrz.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZ3l6Y213emVwcWh0Z3ltc3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxNDI0MTQsImV4cCI6MjA1OTcxODQxNH0.iJU0gTWXYF2To7FU8Uzog9uGtOzfYp7Q5fPy4fh3ICo';
+
+  let todasQuestoes = [];
+  let questoesSelecionadas = [];
+  let indiceAtual = 0;
+  let acertos = 0;
+
+  async function buscarQuestoes() {
+    const disciplina = document.getElementById('filtro-disciplina').value;
+    const banca = document.getElementById('filtro-banca').value;
+
+    let url = `${SUPABASE_URL}/rest/v1/perguntas2?select=*`;
+    const filtros = [];
+    if (disciplina) filtros.push(`disciplina=eq.${encodeURIComponent(disciplina)}`);
+    if (banca) filtros.push(`banca=eq.${encodeURIComponent(banca)}`);
+    if (filtros.length > 0) url += '&' + filtros.join('&');
+
+    const res = await fetch(url, {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+    });
+
+    todasQuestoes = await res.json();
+    document.getElementById('questoes-container').innerHTML = '';
+    document.getElementById('resumo-busca').innerHTML = '';
+    document.getElementById('resumo-final').innerHTML = '';
+
+    if (todasQuestoes.length === 0) {
+      document.getElementById('resumo-busca').innerHTML = '<p>Nenhuma questão encontrada.</p>';
+      document.getElementById('selecao-quantidade').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('resumo-busca').innerHTML = `<p>Foram encontradas <strong>${todasQuestoes.length}</strong> questões com os filtros escolhidos.</p>`;
+    document.getElementById('selecao-quantidade').style.display = 'block';
+  }
+
+  function gerarCaderno() {
+    const qtd = parseInt(document.getElementById('quantidade-desejada').value);
+    if (isNaN(qtd) || qtd < 1) return;
+
+    questoesSelecionadas = todasQuestoes.slice(0, qtd).map(q => ({ ...q, respondida: false }));
+    indiceAtual = 0;
+    acertos = 0;
+    mostrarQuestaoAtual();
+  }
+
+  function mostrarQuestaoAtual() {
+    const container = document.getElementById('questoes-container');
+    container.innerHTML = '';
+    document.getElementById('resumo-final').innerHTML = '';
+
+    if (questoesSelecionadas.length === 0) return;
+
+    const q = questoesSelecionadas[indiceAtual];
+    const alternativas = ['A', 'B', 'C', 'D', 'E'];
+    const textos = [q.alternativa_a, q.alternativa_b, q.alternativa_c, q.alternativa_d, q.alternativa_e];
+
+    const div = document.createElement('div');
+    div.className = 'questao';
+
+    let html = `
+      <strong>Questão ${indiceAtual + 1} de ${questoesSelecionadas.length}</strong><br><br>
+      <strong>Disciplina:</strong> ${q.disciplina} | <strong>Banca:</strong> ${q.banca}<br><br>
+      <strong>Enunciado:</strong><br>${q.enunciado}<br><br>
+      <form id="form-resposta">
+    `;
+
+    alternativas.forEach((letra, i) => {
+      html += `
+        <label class="alternativa">
+          <input type="radio" name="resposta" value="${letra}"> <strong>${letra})</strong> ${textos[i]}
+        </label>
+      `;
+    });
+
+    html += `
+      <button type="button" onclick="verificarResposta()">Responder</button>
+      </form>
+      <div class="feedback" id="feedback-resposta"></div>
+      <div class="navegacao">
+        <button onclick="voltarQuestao()" ${indiceAtual === 0 ? 'disabled' : ''}>⬅️ Anterior</button>
+        <button onclick="avancarQuestao()" ${indiceAtual === questoesSelecionadas.length - 1 ? 'disabled' : ''}>Próxima ➡️</button>
+      </div>
+    `;
+
+    div.innerHTML = html;
+    container.appendChild(div);
+  }
+
+  function verificarResposta() {
+    const form = document.getElementById('form-resposta');
+    const selecionada = form.querySelector('input[name="resposta"]:checked');
+    const feedback = document.getElementById('feedback-resposta');
+    if (!selecionada) {
+      feedback.innerHTML = '⚠️ Selecione uma alternativa!';
+      feedback.style.color = 'orange';
+      return;
+    }
+
+    const resposta = selecionada.value;
+    const q = questoesSelecionadas[indiceAtual];
+
+    if (!q.respondida) {
+      if (resposta === q.alternativa_correta) {
+        acertos++;
+        feedback.innerHTML = '✅ Correto!';
+        feedback.style.color = 'green';
+      } else {
+        feedback.innerHTML = `❌ Errado. Gabarito: ${q.alternativa_correta}`;
+        feedback.style.color = 'red';
+      }
+      q.respondida = true;
+
+      // Se for a última, mostrar o resumo
+      if (indiceAtual === questoesSelecionadas.length - 1) {
+        const total = questoesSelecionadas.length;
+        const percentual = Math.round((acertos / total) * 100);
+        document.getElementById('resumo-final').innerHTML = `
+          ✅ Você acertou <strong>${acertos}</strong> de <strong>${total}</strong> questões.<br>
+          📊 Aproveitamento: <strong>${percentual}%</strong>
+        `;
+      }
+    } else {
+      feedback.innerHTML = '⚠️ Você já respondeu esta questão.';
+      feedback.style.color = 'gray';
+    }
+  }
+
+  function avancarQuestao() {
+    if (indiceAtual < questoesSelecionadas.length - 1) {
+      indiceAtual++;
+      mostrarQuestaoAtual();
+    }
+  }
+
+  function voltarQuestao() {
+    if (indiceAtual > 0) {
+      indiceAtual--;
+      mostrarQuestaoAtual();
+    }
+  }
+</script>
+
+</body>
+</html>
