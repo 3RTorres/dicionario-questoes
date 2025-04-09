@@ -88,7 +88,7 @@
 
 <!-- Barra fixa -->
 <div id="topbar">
-  <div id="usuario-logado">👤 Usuário não identificado</div>
+  <div id="usuario-logado">👤 Verificando login...</div>
   <div class="topbar-buttons">
     <button onclick="voltar()">📘 Novo Caderno</button>
     <button onclick="abrirDesempenho()">📊 Desempenho</button>
@@ -104,21 +104,16 @@
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZ3l6Y213emVwcWh0Z3ltc3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxNDI0MTQsImV4cCI6MjA1OTcxODQxNH0.iJU0gTWXYF2To7FU8Uzog9uGtOzfYp7Q5fPy4fh3ICo'
   );
 
-  // Espera o carregamento da sessão com mais segurança
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    if (session && session.user) {
-      document.getElementById('usuario-logado').textContent = `👤 ${session.user.email}`;
+  async function verificarLogin() {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (user) {
+      document.getElementById('usuario-logado').textContent = `👤 ${user.email}`;
     } else {
       window.location.href = 'login-dicionario-questoes-redirect.html';
     }
-  });
+  }
 
-  // Garante que futuras mudanças sejam ouvidas
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (!session) {
-      window.location.href = 'login-dicionario-questoes-redirect.html';
-    }
-  });
+  verificarLogin();
 
   function logout() {
     supabase.auth.signOut().then(() => {
