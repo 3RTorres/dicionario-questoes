@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Dicionário de Questões</title>
+</head>
+<body style="font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto;">
+
+<h2>Dicionário de Questões</h2>
+
+<!-- Filtros dinâmicos -->
+<div style="margin-bottom: 20px;">
+  <label>Disciplina:</label>
+  <select id="filtro-disciplina">
+    <option value="">Todas</option>
+  </select>
+
+  <label style="margin-left: 20px;">Banca:</label>
+  <select id="filtro-banca">
+    <option value="">Todas</option>
+  </select>
+
+  <button onclick="buscarQuestoes()" style="margin-left: 20px;">Buscar</button>
+</div>
+
+<!-- Resultado -->
+<div id="resultado-questoes"></div>
+
+<script>
+  const SUPABASE_URL = 'https://frgyzcmwzepqhtgymsrz.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZ3l6Y213emVwcWh0Z3ltc3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxNDI0MTQsImV4cCI6MjA1OTcxODQxNH0.iJU0gTWXYF2To7FU8Uzog9uGtOzfYp7Q5fPy4fh3ICo';
+
+  async function carregarFiltros() {
+    const headers = {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`
+    };
+
+    // Buscar disciplinas únicas
+    const resDisciplinas = await fetch(`${SUPABASE_URL}/rest/v1/perguntas2?select=disciplina&group=disciplina`, { headers });
+    const dadosDisciplinas = await resDisciplinas.json();
+    const selectDisciplina = document.getElementById('filtro-disciplina');
+    selectDisciplina.innerHTML = '<option value="">Todas</option>';
+    dadosDisciplinas.forEach(q => {
+      if (q.disciplina) {
+        const opt = document.createElement('option');
+        opt.value = q.disciplina;
+        opt.textContent = q.disciplina;
+        selectDisciplina.appendChild(opt);
+      }
+    });
+
+    // Buscar bancas únicas
+    const resBancas = await fetch(`${SUPABASE_URL}/rest/v1/perguntas2?select=banca&group=banca`, { headers });
+    const dadosBancas = await resBancas.json();
+    const selectBanca = document.getElementById('filtro-banca');
+    selectBanca.innerHTML = '<option value="">Todas</option>';
+    dadosBancas.forEach(q => {
+      if (q.banca) {
+        const opt = document.createElement('option');
+        opt.value = q.banca;
+        opt.textContent = q.banca;
+        selectBanca.appendChild(opt);
+      }
+    });
+  }
+
+  async function buscarQuestoes() {
+    const disciplina = document.getElementById('filtro-disciplina').value;
+    const banca = document.getElementById('filtro-banca').value;
+
+    let url = `${SUPABASE_URL}/rest/v1/perguntas2?select=*`;
+
+    const filtros = [];
+    if (disciplina) filtros.push(`disciplina=eq.${encodeURIComponent(disciplina)}`);
+    if (banca) filtros.push(`banca=eq.${encodeURIComponent(banca)}`);
+
+    if (filtros.length > 0) {
+      url += '&' + filtros.join('&');
+    }
+
+    const res = await fetch(url, {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+    });
+
+    const questoes = await res.json();
+
+    const container = document.getElementById('resultado-questoes');
+    container.innerHTML = '';
+
+    if (questoes.length === 0) {
+      container.innerHTML = '<p>Nenhuma questão encontrada.</p>';
+      return;
+    }
+
+    questoes.forEach(q => {
+      const div = document.createElement('div');
+      div.style.border = '1px solid #ccc';
+      div.style.padding = '10px';
+      div.style.marginBottom = '10px';
+      div.style.borderRadius = '5px';
+
+      div.innerHTML = `
+        <strong>Disciplina:</strong> ${q.disciplina} | <strong>Banca:</strong> ${q.banca}<br><br>
+        <strong>Enunciado:</strong><br>${q.enunciado}<br><br>
+        <strong>A)</strong> ${q.alternativa_a}<br>
+        <strong>B)</strong> ${q.alternativa_b}<br>
+        <strong>C)</strong> ${q.alternativa_c}<br>
+        <strong>D)</strong> ${q.alternativa_d}<br>
+        <strong>E)</strong> ${q.alternativa_e}<br><br>
+        <em>Gabarito: ${q.alternativa_correta}</em>
+      `;
+
+      container.appendChild(div);
+    });
+  }
+
+  // Carregar filtros ao abrir a página
+  carregarFiltros();
+</script>
+
+</body>
+</html>

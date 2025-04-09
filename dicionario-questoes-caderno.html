@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Dicionário de Questões</title>
+  <style>
+    #selecao-quantidade { margin-top: 20px; display: none; }
+    .questao { display: none; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+    .navegacao { margin-top: 10px; }
+  </style>
+</head>
+<body style="font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto;">
+
+<h2>Dicionário de Questões</h2>
+
+<!-- Filtros -->
+<div>
+  <label>Disciplina:</label>
+  <select id="filtro-disciplina">
+    <option value="">Todas</option>
+    <option value="Direito Constitucional">Direito Constitucional</option>
+    <option value="Direito Administrativo">Direito Administrativo</option>
+    <option value="Administração Financeira e Orçamentária">Administração Financeira e Orçamentária</option>
+  </select>
+
+  <label style="margin-left: 20px;">Banca:</label>
+  <select id="filtro-banca">
+    <option value="">Todas</option>
+    <option value="CESPE">CESPE</option>
+    <option value="FCC">FCC</option>
+    <option value="IBFC">IBFC</option>
+    <option value="FGV">FGV</option>
+    <option value="VUNESP">VUNESP</option>
+    <option value="CESGRANRIO">CESGRANRIO</option>
+    <option value="FUNDATEC">FUNDATEC</option>
+  </select>
+
+  <button onclick="buscarQuestoes()" style="margin-left: 20px;">Buscar</button>
+</div>
+
+<!-- Resultado -->
+<div id="resumo-busca" style="margin-top: 20px;"></div>
+
+<!-- Seleção da quantidade -->
+<div id="selecao-quantidade">
+  <label>Quantas questões deseja ver?</label>
+  <input type="number" id="quantidade-desejada" min="1" style="width: 60px;">
+  <button onclick="gerarCaderno()">Gerar Caderno</button>
+</div>
+
+<!-- Caderno de questões -->
+<div id="questoes-container"></div>
+
+<script>
+  const SUPABASE_URL = 'https://frgyzcmwzepqhtgymsrz.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZ3l6Y213emVwcWh0Z3ltc3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQxNDI0MTQsImV4cCI6MjA1OTcxODQxNH0.iJU0gTWXYF2To7FU8Uzog9uGtOzfYp7Q5fPy4fh3ICo';
+
+  let todasQuestoes = [];
+  let questoesSelecionadas = [];
+  let indiceAtual = 0;
+
+  async function buscarQuestoes() {
+    const disciplina = document.getElementById('filtro-disciplina').value;
+    const banca = document.getElementById('filtro-banca').value;
+
+    let url = `${SUPABASE_URL}/rest/v1/perguntas2?select=*`;
+    const filtros = [];
+    if (disciplina) filtros.push(`disciplina=eq.${encodeURIComponent(disciplina)}`);
+    if (banca) filtros.push(`banca=eq.${encodeURIComponent(banca)}`);
+    if (filtros.length > 0) url += '&' + filtros.join('&');
+
+    const res = await fetch(url, {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+    });
+
+    todasQuestoes = await res.json();
+    document.getElementById('questoes-container').innerHTML = '';
+    document.getElementById('resumo-busca').innerHTML = '';
+
+    if (todasQuestoes.length === 0) {
+      document.getElementById('resumo-busca').innerHTML = '<p>Nenhuma questão encontrada.</p>';
+      document.getElementById('selecao-quantidade').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('resumo-busca').innerHTML = `<p>Foram encontradas <strong>${todasQuestoes.length}</strong> questões com os filtros escolhidos.</p>`;
+    document.getElementById('selecao-quantidade').style.display = 'block';
+  }
+
+  function gerarCaderno() {
+    const qtd = parseInt(document.getElementById('quantidade-desejada').value);
+    if (isNaN(qtd) || qtd < 1) return;
+
+    questoesSelecionadas = todasQuestoes.slice(0, qtd);
+    indiceAtual = 0;
+    mostrarQuestaoAtual();
+  }
+
+  function mostrarQuestaoAtual() {
+    const container = document.getElementById('questoes-container');
+    container.innerHTML = '';
+
+    if (questoesSelecionadas.length === 0) return;
+
+    const q = questoesSelecionadas[indiceAtual];
+
+    const div = document.createElement('div');
+    div.className = 'questao';
+    div.style.display = 'block';
+
+    div.innerHTML = `
+      <strong>Questão ${indiceAtual + 1} de ${questoesSelecionadas.length}</strong><br><br>
+      <strong>Disciplina:</strong> ${q.disciplina} | <strong>Banca:</strong> ${q.banca}<br><br>
+      <strong>Enunciado:</strong><br>${q.enunciado}<br><br>
+      <strong>A)</strong> ${q.alternativa_a}<br>
+      <strong>B)</strong> ${q.alternativa_b}<br>
+      <strong>C)</strong> ${q.alternativa_c}<br>
+      <strong>D)</strong> ${q.alternativa_d}<br>
+      <strong>E)</strong> ${q.alternativa_e}<br><br>
+      <em>Gabarito: ${q.alternativa_correta}</em>
+      <div class="navegacao">
+        <button onclick="voltarQuestao()" ${indiceAtual === 0 ? 'disabled' : ''}>⬅️ Anterior</button>
+        <button onclick="avancarQuestao()" ${indiceAtual === questoesSelecionadas.length - 1 ? 'disabled' : ''}>Próxima ➡️</button>
+      </div>
+    `;
+
+    container.appendChild(div);
+  }
+
+  function avancarQuestao() {
+    if (indiceAtual < questoesSelecionadas.length - 1) {
+      indiceAtual++;
+      mostrarQuestaoAtual();
+    }
+  }
+
+  function voltarQuestao() {
+    if (indiceAtual > 0) {
+      indiceAtual--;
+      mostrarQuestaoAtual();
+    }
+  }
+</script>
+
+</body>
+</html>
